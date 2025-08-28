@@ -1,0 +1,51 @@
+name: trigger release
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # 每天凌晨3点触发
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Restore
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: cache-version
+
+      - name: Version Check
+        run: |
+          git clone --quiet --no-checkout https://github.com/rmyorston/busybox-w32.git
+          cd busybox-w32
+          latest_version=$(git tag --sort=-creatordate | head -n 1)
+
+          mkdir -p .cache
+          last_version=$(cat .cache/version)
+
+          if [ "$latest_version" != "$last_version" ]; then
+            echo "Version changed from $last_version to $latest_version"
+            echo "VERSION_CHANGED=true" >> $GITHUB_ENV
+            echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
+          else
+            echo "Version unchanged at $latest_version"
+          fi
+
+      - name: Create Tag
+        if: env.VERSION_CHANGED == 'true'
+        run: |
+          # 创建标签
+          git tag ${{ env.LATEST_VERSION }}
+          # 推送标签到远程仓库
+          git push origin ${{ env.LATEST_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 使用内置token
+
+      - name: Cache Save
+        if: env.VERSION_CHANGED == 'true'
+        run: |
+          echo ${{ github.ref_name }} > .cache/version
