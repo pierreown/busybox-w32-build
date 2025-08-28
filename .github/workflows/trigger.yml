@@ -12,21 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache Restore
-        id: cache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: .cache
-          key: busybox-w32-build-last-version
-
       - name: Version Check
         run: |
           git clone --quiet --no-checkout https://github.com/rmyorston/busybox-w32.git
-          cd busybox-w32
-          latest_version=$(git tag --sort=-creatordate | head -n 1)
+          latest_version=$(cd busybox-w32 && git tag --sort=-creatordate | head -n 1)
 
-          mkdir -p .cache && touch .cache/version
-          last_version=$(cat .cache/version)
+          last_version=$(git tag --sort=-creatordate | head -n 1)
 
           if [ "$latest_version" != "$last_version" ]; then
             echo "Version changed from $last_version to $latest_version"
@@ -47,10 +38,3 @@ jobs:
           echo ${{ env.LATEST_VERSION }} > .cache/version
         env:
           GITHUB_TOKEN: ${{ secrets.CUSTOM_GITHUB_TOKEN }} # 使用自定义token
-
-      - name: Cache Save
-        if: env.VERSION_CHANGED == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: .cache
-          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
