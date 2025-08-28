@@ -37,30 +37,30 @@ jobs:
             depends_on: gcc-mingw-w64-ucrt64
 
     steps:
-      - name: Install build dependencies
+      - name: Install Build Dependencies
         run: |
           apt-get update
           apt-get install -y make gcc git bzip2
           [ -n "${{ matrix.config.depends_on }}" ] && apt-get install -y ${{ matrix.config.depends_on }}
 
-      - name: Clone repository
+      - name: Clone BusyBox-w32
         run: |
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
 
-      - name: Create custom config for UCRT64 variants
+      - name: Create UCRT64 Variants Config
         if: matrix.config.base_defconfig != ''
         run: |
           cd busybox-w32
           sed 's/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32-"/CROSS_COMPILER_PREFIX="${{ matrix.config.cross_compiler }}"/' configs/${{ matrix.config.base_defconfig }} > configs/${{ matrix.config.defconfig }}
 
-      - name: Build ${{ matrix.config.name }} variant
+      - name: Build ${{ matrix.config.name }}
         run: |
           cd busybox-w32
           make ${{ matrix.config.defconfig }}
           make -j$(nproc)
           mv busybox.exe ${{ matrix.config.output }}
 
-      - name: Upload build artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.config.output }}
@@ -71,18 +71,19 @@ jobs:
     needs: build # 等待所有构建任务完成
     runs-on: ubuntu-latest
     steps:
-      - name: Create release directory
+      - name: Create Release Directory
         run: mkdir -p /tmp/release
 
-      - name: Download all build artifacts
+      - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
           path: /tmp/release
 
-      - name: Clone repository from release branch
+      - name: Check Release Directory
         run: |
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
           [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE /tmp/release
+          ls -al /tmp/release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
