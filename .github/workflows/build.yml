@@ -118,14 +118,14 @@ jobs:
               "autoupdate": {
                   "architecture": {
                       "64bit": {
-                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/$version/busybox-ucrt64u.exe#/busybox.exe"
+                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/\$version/busybox-ucrt64u.exe#/busybox.exe"
                       },
                       "32bit": {
-                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/$version/busybox-w32.exe#/busybox.exe"
+                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/\$version/busybox-w32.exe#/busybox.exe"
                       }
                   },
                   "hash": {
-                      "url": "$url.sha256"
+                      "url": "\$url.sha256"
                   }
               }
           }
