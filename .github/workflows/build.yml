@@ -71,15 +71,18 @@ jobs:
     needs: build # 等待所有构建任务完成
     runs-on: ubuntu-latest
     steps:
+      - name: Create release directory
+        run: mkdir -p /tmp/release
+
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
-          path: release
+          path: /tmp/release
 
       - name: Clone repository from release branch
         run: |
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
-          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
+          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE /tmp/release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -90,6 +93,7 @@ jobs:
             Branch: ${{ github.ref_name }}
             Build Time: ${{ github.event.head_commit.timestamp }}
           files: |
-            release/*.exe
+            /tmp/release/*.exe
+            /tmp/release/LICENSE
           draft: false
           prerelease: false
