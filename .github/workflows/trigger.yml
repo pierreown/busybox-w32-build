@@ -43,7 +43,7 @@ jobs:
           # 推送标签到远程仓库
           git push origin ${{ env.LATEST_VERSION }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 使用内置token
+          GITHUB_TOKEN: ${{ secrets.CUSTOM_GITHUB_TOKEN }} # 使用自定义token
 
       - name: Cache Save
         if: env.VERSION_CHANGED == 'true'
