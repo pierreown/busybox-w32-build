@@ -76,13 +76,6 @@ jobs:
         with:
           path: release
 
-      - name: Organize release files
-        run: |
-          # 将所有exe文件移动到release根目录
-          find release -name "*.exe" -exec mv {} release/ \;
-          # 删除空的 artifact 目录
-          find release -type d -empty -delete
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -92,6 +85,6 @@ jobs:
             Branch: ${{ github.ref_name }}
             Build Time: ${{ github.event.head_commit.timestamp }}
           files: |
-            release/*
+            release/*.exe
           draft: false
           prerelease: false
