@@ -24,7 +24,7 @@ jobs:
           cd busybox-w32
           latest_version=$(git tag --sort=-creatordate | head -n 1)
 
-          mkdir -p .cache
+          mkdir -p .cache && touch .cache/version
           last_version=$(cat .cache/version)
 
           if [ "$latest_version" != "$last_version" ]; then
