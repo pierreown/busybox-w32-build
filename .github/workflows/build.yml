@@ -60,6 +60,19 @@ jobs:
           make -j$(nproc)
           mv busybox.exe ${{ matrix.config.output }}
 
+      # - name: Create Scoop Manifest
+      #   run: |
+      #     cat <<EOF > release/${{ matrix.config.output }}.json
+      #     {
+      #       "version": "${{ github.ref_name }}",
+      #       "url": "https://github.com/rmyorston/busybox-w32/releases/download/${{ github.ref_name }}/${{ matrix.config.output }}",
+      #       "hash": "SKIP",
+      #       "bin": [
+      #         "${{ matrix.config.output }}"
+      #       ]
+      #     }
+      #     EOF
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -72,18 +85,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Release Directory
-        run: mkdir -p /tmp/release
+        run: mkdir -p release
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: /tmp/release
+          path: release
 
       - name: Check Release Directory
         run: |
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
-          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE /tmp/release
-          ls -al /tmp/release
+          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -94,7 +106,10 @@ jobs:
             Branch: ${{ github.ref_name }}
             Build Time: ${{ github.event.head_commit.timestamp }}
           files: |
-            /tmp/release/*.exe
-            /tmp/release/LICENSE
+            release/busybox-mingw64.exe
+            release/busybox-mingw64u.exe
+            release/busybox-ucrt64.exe
+            release/busybox-ucrt64u.exe
+            release/LICENSE
           draft: false
           prerelease: false
