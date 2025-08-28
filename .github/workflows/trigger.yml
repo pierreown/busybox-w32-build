@@ -17,7 +17,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .cache
-          key: cache-version
+          key: busybox-w32-build-last-version
 
       - name: Version Check
         run: |
