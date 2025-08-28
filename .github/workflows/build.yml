@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Install build dependencies
-        run: apt-get update && apt-get install -y make gcc gcc-mingw-w64-x86-64 gcc-mingw-w64-ucrt64 git
+        run: apt-get update && apt-get install -y make gcc gcc-mingw-w64-x86-64 gcc-mingw-w64-ucrt64 git bzip2
 
       - name: Clone
         run: |
