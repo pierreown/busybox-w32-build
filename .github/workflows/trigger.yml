@@ -48,4 +48,5 @@ jobs:
       - name: Cache Save
         if: env.VERSION_CHANGED == 'true'
         run: |
-          echo ${{ github.ref_name }} > .cache/version
+          mkdir -p .cache
+          echo ${{ env.LATEST_VERSION }} > .cache/version
