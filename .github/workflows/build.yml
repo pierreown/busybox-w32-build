@@ -60,7 +60,6 @@ jobs:
           cp busybox-w32/busybox-mingw64u.exe release/
           cp busybox-w32/busybox-ucrt64.exe release/
           cp busybox-w32/busybox-ucrt64u.exe release/
-          cp build-info.txt release/
           [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
 
       - name: Release
