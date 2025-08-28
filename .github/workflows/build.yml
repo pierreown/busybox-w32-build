@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to build'
+        description: "Branch to build"
         required: true
-        default: 'master'
+        default: "master"
 
 jobs:
   build:
@@ -58,7 +58,7 @@ jobs:
       - name: Output
         run: |
           mkdir -p release
-          cp build-info.txt \ 
+          cp build-info.txt \
             busybox-w32/busybox-mingw64.exe \
             busybox-w32/busybox-mingw64u.exe \
             busybox-w32/busybox-ucrt64.exe \
