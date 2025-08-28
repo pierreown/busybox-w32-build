@@ -1,77 +1,97 @@
 name: Build BusyBox-w32
 
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to build"
-        required: true
-        default: "master"
+  push:
+    tags:
+      - "*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: debian:trixie # ucrt64 要求 debian 13 +
+    container: debian:trixie
+    strategy:
+      # 即使一个构建失败，其他构建也会继续
+      fail-fast: true
+      matrix:
+        # 定义要并行构建的配置矩阵
+        config:
+          - name: mingw64
+            defconfig: mingw64_defconfig
+            output: busybox-mingw64.exe
+            depends_on: gcc-mingw-w64-x86-64
+          - name: mingw64u
+            defconfig: mingw64u_defconfig
+            output: busybox-mingw64u.exe
+            depends_on: gcc-mingw-w64-x86-64
+          - name: ucrt64
+            defconfig: ucrt64_defconfig
+            output: busybox-ucrt64.exe
+            base_defconfig: mingw64_defconfig
+            cross_compiler: "x86_64-w64-mingw32ucrt-"
+            depends_on: gcc-mingw-w64-ucrt64
+          - name: ucrt64u
+            defconfig: ucrt64u_defconfig
+            output: busybox-ucrt64u.exe
+            base_defconfig: mingw64u_defconfig
+            cross_compiler: "x86_64-w64-mingw32ucrt-"
+            depends_on: gcc-mingw-w64-ucrt64
 
     steps:
       - name: Install build dependencies
-        run: apt-get update && apt-get install -y make gcc gcc-mingw-w64-x86-64 gcc-mingw-w64-ucrt64 git bzip2
-
-      - name: Clone
         run: |
-          git clone --depth 1 -b ${{ github.event.inputs.branch }} https://github.com/rmyorston/busybox-w32.git
-          cd busybox-w32
-          git log -1 --format="%h (%s)" > build-info.txt
+          apt-get update
+          apt-get install -y make gcc git bzip2
+          [ -n "${{ matrix.config.depends_on }}" ] && apt-get install -y ${{ matrix.config.depends_on }}
 
-      - name: Build Mingw64
+      - name: Clone repository
+        run: |
+          git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
+
+      - name: Create custom config for UCRT64 variants
+        if: matrix.config.base_defconfig != ''
         run: |
           cd busybox-w32
-          make mingw64_defconfig
+          sed 's/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32-"/CROSS_COMPILER_PREFIX="${{ matrix.config.cross_compiler }}"/' configs/${{ matrix.config.base_defconfig }} > configs/${{ matrix.config.defconfig }}
+
+      - name: Build ${{ matrix.config.name }} variant
+        run: |
+          cd busybox-w32
+          make ${{ matrix.config.defconfig }}
           make -j$(nproc)
-          mv busybox.exe busybox-mingw64.exe
+          mv busybox.exe ${{ matrix.config.output }}
 
-      - name: Build Mingw64 Unicode
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.config.output }}
+          path: busybox-w32/${{ matrix.config.output }}
+
+  # 收集所有构建产物并创建发布
+  release:
+    needs: build # 等待所有构建任务完成
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: release
+
+      - name: Organize release files
         run: |
-          cd busybox-w32
-          make mingw64u_defconfig
-          make -j$(nproc)
-          mv busybox.exe busybox-mingw64u.exe
+          # 将所有exe文件移动到release根目录
+          find release -name "*.exe" -exec mv {} release/ \;
+          # 删除空的 artifact 目录
+          find release -type d -empty -delete
 
-      - name: Build UCRT64
-        run: |
-          cd busybox-w32
-          sed 's/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32-"/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32ucrt-"/' configs/mingw64_defconfig > configs/ucrt64_defconfig
-          make ucrt64_defconfig
-          make -j$(nproc)
-          mv busybox.exe busybox-ucrt64.exe
-
-      - name: Build UCRT64 Unicode
-        run: |
-          cd busybox-w32
-          sed 's/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32-"/CROSS_COMPILER_PREFIX="x86_64-w64-mingw32ucrt-"/' configs/mingw64u_defconfig > configs/ucrt64u_defconfig
-          make ucrt64u_defconfig
-          make -j$(nproc)
-          mv busybox.exe busybox-ucrt64u.exe
-
-      - name: Output
-        run: |
-          mkdir -p release
-          cp busybox-w32/busybox-mingw64.exe release/
-          cp busybox-w32/busybox-mingw64u.exe release/
-          cp busybox-w32/busybox-ucrt64.exe release/
-          cp busybox-w32/busybox-ucrt64u.exe release/
-          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
-
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             Auto Build BusyBox-w32
-            Tag: ${{ github.event.inputs.branch }}
+            Branch: ${{ github.ref_name }}
             Build Time: ${{ github.event.head_commit.timestamp }}
           files: |
             release/*
-            release/LICENSE
           draft: false
           prerelease: false
