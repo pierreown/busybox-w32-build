@@ -17,11 +17,11 @@ jobs:
         config:
           - name: mingw64
             defconfig: mingw64_defconfig
-            output: busybox-mingw64.exe
+            output: busybox-w64.exe
             depends_on: gcc-mingw-w64-x86-64
           - name: mingw64u
             defconfig: mingw64u_defconfig
-            output: busybox-mingw64u.exe
+            output: busybox-w64u.exe
             depends_on: gcc-mingw-w64-x86-64
           - name: ucrt64
             defconfig: ucrt64_defconfig
@@ -35,6 +35,10 @@ jobs:
             base_defconfig: mingw64u_defconfig
             cross_compiler: "x86_64-w64-mingw32ucrt-"
             depends_on: gcc-mingw-w64-ucrt64
+          - name: mingw32
+            defconfig: mingw32_defconfig
+            output: busybox-w32.exe
+            depends_on: gcc-mingw-w64-i686
 
     steps:
       - name: Install Build Dependencies
@@ -60,10 +64,6 @@ jobs:
           make -j$(nproc)
           mv busybox.exe ${{ matrix.config.output }}
 
-      - name: Create Scoop Manifest
-        run: |
-
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -83,19 +83,60 @@ jobs:
       - name: Create Release Directory
         run: |
           mkdir -p release
+
+          # 移动所有构建产物到 release 目录
           find artifacts -type f -name "*.exe" -exec mv {} release/ \;
-          
+
+          # 计算每个构建产物的 SHA256 哈希
+          for file in release/*.exe; do
+            sha256sum "$file" | awk '{print $1}' > "${file}.sha256"
+          done
+
+          # 从 rmyorston/busybox-w32 仓库复制 LICENSE 文件
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
           [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
 
-          ls -l release/
+      - name: Create Scoop Manifest
+        run: |
+          cat <<EOF > release/busybox.json
+          {
+              "version": "${{ github.ref_name }}",
+              "description": "BusyBox is a single binary that contains many common Unix tools",
+              "homepage": "https://frippery.org/busybox",
+              "license": "GPL-2.0-only",
+              "architecture": {
+                  "64bit": {
+                      "url": "https://github.com/pierreown/busybox-w32-build/releases/download/${{ github.ref_name }}/busybox-ucrt64u.exe#/busybox.exe",
+                      "hash": "sha256:$(cat release/busybox-ucrt64u.exe.sha256)"
+                  },
+                  "32bit": {
+                      "url": "https://github.com/pierreown/busybox-w32-build/releases/download/${{ github.ref_name }}/busybox-w32.exe#/busybox.exe",
+                      "hash": "sha256:$(cat release/busybox-w32.exe.sha256)"
+                  }
+              },
+              "checkver": "github",
+              "autoupdate": {
+                  "architecture": {
+                      "64bit": {
+                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/$version/busybox-ucrt64u.exe#/busybox.exe"
+                      },
+                      "32bit": {
+                          "url": "https://github.com/pierreown/busybox-w32-build/releases/download/$version/busybox-w32.exe#/busybox.exe"
+                      }
+                  },
+                  "hash": {
+                      "url": "$url.sha256"
+                  }
+              }
+          }
+          EOF
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
           body: |
-            Auto Build BusyBox-w32
+            Repository: https://github.com/rmyorston/busybox-w32
             Branch: ${{ github.ref_name }}
             Build Time: ${{ github.event.head_commit.timestamp }}
           files: |
