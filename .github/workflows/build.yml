@@ -83,7 +83,7 @@ jobs:
       - name: Create Release Directory
         run: |
           mkdir -p release
-          cp artifacts/* release/
+          mv artifacts/* release/
           
           git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
           [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
