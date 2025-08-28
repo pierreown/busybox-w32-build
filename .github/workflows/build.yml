@@ -10,10 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     container: debian:trixie
     strategy:
-      # 即使一个构建失败，其他构建也会继续
       fail-fast: true
       matrix:
-        # 定义要并行构建的配置矩阵
+        # 定义要并行构建的配置
         config:
           - name: mingw64
             defconfig: mingw64_defconfig
