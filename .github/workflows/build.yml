@@ -15,9 +15,7 @@ jobs:
 
     steps:
       - name: Install build dependencies
-        run: apt-get update && apt-get install -y git \
-          make gcc \
-          gcc-mingw-w64-x86-64 gcc-mingw-w64-ucrt64
+        run: apt-get update && apt-get install -y make gcc gcc-mingw-w64-x86-64 gcc-mingw-w64-ucrt64 git
 
       - name: Clone
         run: |
@@ -58,12 +56,11 @@ jobs:
       - name: Output
         run: |
           mkdir -p release
-          cp build-info.txt \
-            busybox-w32/busybox-mingw64.exe \
-            busybox-w32/busybox-mingw64u.exe \
-            busybox-w32/busybox-ucrt64.exe \
-            busybox-w32/busybox-ucrt64u.exe \
-            release/
+          cp busybox-w32/busybox-mingw64.exe release/
+          cp busybox-w32/busybox-mingw64u.exe release/
+          cp busybox-w32/busybox-ucrt64.exe release/
+          cp busybox-w32/busybox-ucrt64u.exe release/
+          cp build-info.txt release/
           [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
 
       - name: Release
