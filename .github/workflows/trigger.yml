@@ -32,9 +32,7 @@ jobs:
       - name: Create Tag
         if: env.VERSION_CHANGED == 'true'
         run: |
-          git config --global user.name "pierreown"
-          git config --global user.email "pierreown@qq.com"
           # 创建标签
           git tag ${{ env.LATEST_VERSION }}
           # 推送标签到远程仓库
-          git push origin https://${{ secrets.CUSTOM_GITHUB_TOKEN }}@github.com/pierreown/busybox-w32-build.git ${{ env.LATEST_VERSION }}
+          git push origin --tags --follow-tags -u pierreown:${{ secrets.CUSTOM_GITHUB_TOKEN }}
