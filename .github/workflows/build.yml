@@ -76,6 +76,11 @@ jobs:
         with:
           path: release
 
+      - name: Clone repository from release branch
+        run: |
+          git clone --depth 1 -b ${{ github.ref_name }} https://github.com/rmyorston/busybox-w32.git
+          [ -f busybox-w32/LICENSE ] && cp busybox-w32/LICENSE release/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
