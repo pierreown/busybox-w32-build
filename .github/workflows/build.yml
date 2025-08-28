@@ -79,7 +79,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
           body: |
             Auto Build BusyBox-w32
             Branch: ${{ github.ref_name }}
