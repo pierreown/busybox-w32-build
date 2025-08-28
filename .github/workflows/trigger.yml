@@ -13,7 +13,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Restore
-        uses: actions/cache@v4
+        id: cache-restore
+        uses: actions/cache/restore@v4
         with:
           path: .cache
           key: cache-version
@@ -42,11 +43,14 @@ jobs:
           git tag ${{ env.LATEST_VERSION }}
           # 推送标签到远程仓库
           git push origin ${{ env.LATEST_VERSION }}
+          # 保存最新版本到缓存
+          echo ${{ env.LATEST_VERSION }} > .cache/version
         env:
           GITHUB_TOKEN: ${{ secrets.CUSTOM_GITHUB_TOKEN }} # 使用自定义token
 
       - name: Cache Save
         if: env.VERSION_CHANGED == 'true'
-        run: |
-          mkdir -p .cache
-          echo ${{ env.LATEST_VERSION }} > .cache/version
+        uses: actions/cache/save@v4
+        with:
+          path: .cache
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
