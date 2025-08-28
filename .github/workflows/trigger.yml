@@ -1,4 +1,4 @@
-name: trigger release
+name: Trigger
 
 on:
   schedule:
