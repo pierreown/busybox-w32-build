@@ -19,9 +19,9 @@ jobs:
       - name: Version Check
         run: |
           TARGET_REPO="https://github.com/rmyorston/busybox-w32.git"
-          latest_version=$(git ls-remote --tags --refs --sort=-v:refname "$TARGET_REPO" "FRP*" | head -n 1 | awk '{print $2}' | sed 's|^refs/tags/||')  
+          latest_version=$(git ls-remote --tags --refs --sort=-v:refname "$TARGET_REPO" "FRP*" | head -n 1 | awk '{print $2}' | sed 's|^refs/tags/||' | tr -d '\r\n')  
 
-          last_version=$(git tag --sort=-v:refname | head -n 1)
+          last_version=$(git tag --sort=-v:refname | head -n 1 | tr -d '\r\n')
 
           if [ "$latest_version" != "$last_version" ]; then
             echo "Version changed from $last_version to $latest_version"
