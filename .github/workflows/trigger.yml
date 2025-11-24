@@ -18,8 +18,8 @@ jobs:
 
       - name: Version Check
         run: |
-          git clone --quiet --no-checkout https://github.com/rmyorston/busybox-w32.git
-          latest_version=$(cd busybox-w32 && git tag -l "FRP*" --sort=-v:refname | head -n 1)  
+          TARGET_REPO="https://github.com/rmyorston/busybox-w32.git"
+          latest_version=$(git ls-remote --tags --refs --sort=-v:refname "$TARGET_REPO" "FRP*" | head -n 1 | awk '{print $2}' | sed 's|^refs/tags/||')  
 
           last_version=$(git tag --sort=-v:refname | head -n 1)
 
