@@ -28,6 +28,7 @@ jobs:
             echo "VERSION_CHANGED=true" >> $GITHUB_ENV
             echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
           else
+            echo "VERSION_CHANGED=false" >> $GITHUB_ENV
             echo "Version unchanged at $latest_version"
           fi
 
